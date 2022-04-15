@@ -7,3 +7,4 @@ for file in *.asm
 aslink -s -m -w -u main.s19 *.rel
 
 rm *.rel
+rm *.map

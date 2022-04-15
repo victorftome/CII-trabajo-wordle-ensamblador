@@ -13,6 +13,7 @@
 
 ; Variables con la presentación a imprimir
 title:
+	.ascii "\33[37m"
 	.ascii " ____ ____ ____ ____ ____ ____ \n"
 	.ascii "||\33[32mW\33[37m |||\33[32mO\33[37m |||\33[32mR\33[37m |||\33[33mD\33[37m |||\33[31mL\33[37m |||\33[31mE\33[37m ||\n"
 	.ascii "||__|||__|||__|||__|||__|||__||\n"
@@ -23,6 +24,9 @@ authors:
 	.ascii "Programa realizado por \n"
 	.ascii "\t\33[32mVictor \33[33mFuncia \33[31mTome\33[37m   | victorfunciatome@usal.es\n"
 	.asciz "\t\33[33mManuel \33[32mGarcia \33[31mCortes\33[37m | ManuGaCo@usal.es\n\n"
+
+mensaje_continuar:
+	.asciz "Pulse una tecla para continuar: "
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   print_presentacion                                                           ;
@@ -40,6 +44,13 @@ print_presentacion:
 
 	ldx		#authors	; Cargamos en el registro x con la dir de inicio de la cadena
 	jsr		print		; ejecutamos la subrutina print, que toma como parametro el contenido de x
+
+	ldx 	#mensaje_continuar
+	jsr		print
+
+	; Pedimos una entrada por teclado que almacenaremos en x, ya que posterioremente vamos a recuperar sus valores
+	; No hace falta hacer nada con el caracter introducido, simplemente lo usamos para pausar el programa.
+	ldx		0xFF02
 
 	pulu	x		; Recuperamos el valor del registro x
 	rts

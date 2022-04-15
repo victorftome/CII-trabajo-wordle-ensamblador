@@ -1,6 +1,7 @@
 .module main
 
 .globl	print_presentacion
+.globl	print_menu
 
 ; Variables con la dirección de inicio de las pilas
 ; Se han elegido estas direcciones ya que se considera que
@@ -13,18 +14,21 @@ pila_usuario	.equ	0xE000 ; Dirección inicio pila usuario
 teclado			.equ	0xFF02
 pantalla		.equ	0xFF00
 
-.globl	programa
+.globl	main
 
-programa:
+main:
 	; Le indicamos a las Pilas la direccion de comienzo para evitar futuros problemas
 	lds	#pila_sistema
 	ldu	#pila_usuario
 
 	jsr	print_presentacion
 
+menu:
+	jsr	print_menu
+
 fin_programa:
 	clra
 	sta	0xFF01
 	.area	FIJA(ABS)
 	.org	0xFFFE
-	.word 	programa
+	.word 	main

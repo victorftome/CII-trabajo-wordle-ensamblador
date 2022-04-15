@@ -6,24 +6,34 @@
 
 .module operaciones_cadenas
 
-.globl print
+.globl	print
+.globl	lineas_leidas
+
+lineas_leidas:	.byte	0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   print                                                                        ;
 ;       Imprime por pantalla la cadena apuntada por el registro X                ;
 ;                                                                                ;
 ;   Entrada: X-direccion de comienzo en la cadena                                ;
-;   Salida: Ninguna                                                              ;
-;   Registros afectados: X, CC.                                                  ;
+;   Salida: B-Número líneas mostradas                                            ;
+;   Registros afectados: B, X, CC.                                               ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 print:
     pshu    a               ; Almacenamos el contenido del registro a en la pila de usuario
+	clr lineas_leidas
 
 next_char:
     lda     ,x+             ; Almacenamos el contenido de x en a y aumentamos el apuntador
     beq     string_end      ; Comprobamos que el contenido no sea 0, es decir, el caracter nulo (\0)
     sta     0xFF00          ; Imprimimos el contenido en pantalla 
+
+	cmpa	#'\n ; Comprobamos que sea un final de linea
+	bne		next_char ; En caso de que no lo sea simplemente leemos el siguiente caracter
+
+	inc		lineas_leidas ; Incrementamos las lineas leidas, ya que hemos detectado un salto de linea
+
     bra     next_char
 
 string_end:
