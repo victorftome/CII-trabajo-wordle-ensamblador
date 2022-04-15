@@ -6,7 +6,9 @@
 
 .module operaciones_cadenas
 
+; Variables globales
 .globl	print
+.globl  int_to_char
 .globl	lineas_leidas
 
 lineas_leidas:	.byte	0
@@ -17,7 +19,7 @@ lineas_leidas:	.byte	0
 ;                                                                                ;
 ;   Entrada: X-direccion de comienzo en la cadena                                ;
 ;   Salida: B-Número líneas mostradas                                            ;
-;   Registros afectados: B, X, CC.                                               ;
+;   Registros afectados: X, CC.                                               ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 print:
@@ -38,4 +40,18 @@ next_char:
 
 string_end:
     pulu    a               ; Recuperamos el contenido de a
+    rts
+
+; TODO: Completar int_to_char
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   int_to_char                                                                  ;
+;       Pasa un numero a caracter                                                ;
+;                                                                                ;
+;   Entrada: B-Número a pasar a caracter                                         ;
+;   Salida: B-El número transformado a caracteres correstamente                  ;
+;   Registros afectados: B, X, CC.                                               ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+int_to_char:
+
     rts

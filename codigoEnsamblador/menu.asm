@@ -1,6 +1,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   MODULO: menu                                                                 ;
-;       En este modulo se va a encargar de realizar todas las operaciones        ;
+;       Este modulo se va a encargar de realizar todas las operaciones           ;
 ;       relacionadas con el menu, desde su presentacion hasta saltos.            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
