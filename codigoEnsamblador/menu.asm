@@ -10,6 +10,7 @@
 
 ; Subrutinas a usar
 .globl	print
+.globl inicializar_juego
 
 ; Variables globales
 .globl	palabras
@@ -75,23 +76,27 @@ comprobar_opcion:
 	bra		solicitud_opcion
 
 mostrar_diccionario:
-	pshu	x,a
+	pshu	x,d
 
-	ldx		#cadena_diccionario
-	jsr		print
+	ldx	#cadena_diccionario
+	jsr	print
 
-	ldx		#palabras
-	jsr		print
+	ldx	#palabras
+	jsr	print
 
-	lda		lineas_leidas
+	lda	lineas_leidas
 
-	ldx		#cadena_num_palabras
-	jsr		print
+	ldx	#cadena_num_palabras
+	jsr	print
 
-	sta		0xFF00
+	ldd	lineas_leidas
 
-	pulu	x,a
-	bra		print_menu
+	sta	0xFF00
+	stb	0xFF00
+
+	pulu	x,d
+	bra	print_menu
 
 jugar:
-	rts
+	jsr	inicializar_juego
+	bra	salir

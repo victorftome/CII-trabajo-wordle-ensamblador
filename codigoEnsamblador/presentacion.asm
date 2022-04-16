@@ -39,18 +39,18 @@ mensaje_continuar:
 print_presentacion:
 	pshu	x		; Almacenamos el contenido de x en la pila para posterior recuperacion
 
-	ldx		#title	; Cargamos en el registro x con la dir de inicio de la cadena
-	jsr		print	; ejecutamos la subrutina print, que toma como parametro el contenido de x
+	ldx	#title	; Cargamos en el registro x con la dir de inicio de la cadena
+	jsr	print	; ejecutamos la subrutina print, que toma como parametro el contenido de x
 
-	ldx		#authors	; Cargamos en el registro x con la dir de inicio de la cadena
-	jsr		print		; ejecutamos la subrutina print, que toma como parametro el contenido de x
+	ldx	#authors	; Cargamos en el registro x con la dir de inicio de la cadena
+	jsr	print		; ejecutamos la subrutina print, que toma como parametro el contenido de x
 
-	ldx 	#mensaje_continuar
-	jsr		print
+	ldx	#mensaje_continuar
+	jsr	print
 
 	; Pedimos una entrada por teclado que almacenaremos en x, ya que posterioremente vamos a recuperar sus valores
 	; No hace falta hacer nada con el caracter introducido, simplemente lo usamos para pausar el programa.
-	ldx		0xFF02
+	ldx	0xFF02
 
 	pulu	x		; Recuperamos el valor del registro x
 	rts

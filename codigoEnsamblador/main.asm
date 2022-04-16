@@ -10,10 +10,6 @@
 pila_sistema	.equ	0xD000 ; Dirección inicio pila sistema
 pila_usuario	.equ	0xE000 ; Dirección inicio pila usuario
 
-; Variables constantes para ahorrarse escribir la dirección de memoria de cada referencia
-teclado			.equ	0xFF02
-pantalla		.equ	0xFF00
-
 .globl	main
 
 main:
@@ -27,6 +23,9 @@ menu:
 	jsr	print_menu
 
 fin_programa:
+	lda	#'\n
+	sta	0xFF00
+
 	clra
 	sta	0xFF01
 	.area	FIJA(ABS)
