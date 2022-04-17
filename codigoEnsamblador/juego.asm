@@ -16,6 +16,8 @@ num_intentos	.equ	6 ; Varibale de referencia que va a almacenar el numero de int
 initial_up_offset:	.asciz	"\033[3A"
 cursor_up:	.asciz	"\033[4A"
 cursor_right:	.asciz	"\033[5C"
+save_cursor_position:	.asciz	"\033[s"
+restore_cursor_position:	.asciz	"\033[u"
 
 cabecera_juego:
 	.asciz	"\n\n            W O R D L E\n\n"
@@ -39,6 +41,9 @@ bucle_columnas:
 	bra	bucle_columnas
 
 cont:
+	ldx	#save_cursor_position
+	jsr	print
+
 	ldx	#initial_up_offset
 	jsr	print
 
@@ -46,5 +51,13 @@ cont:
 	jsr	print
 
 	lda	0xFF02
+
+	ldx	#cursor_right
+	jsr	print
+
 	lda	0xFF02
+
+	ldx	#restore_cursor_position
+	jsr	print
+
 	rts
