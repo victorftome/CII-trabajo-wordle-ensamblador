@@ -18,7 +18,7 @@ lineas_leidas:	.word   0
 ;                                                                                ;
 ;   Entrada: X-direccion de comienzo en la cadena                                ;
 ;   Salida: B-Número líneas mostradas                                            ;
-;   Registros afectados: X, CC.                                               ;
+;   Registros afectados: X, CC.                                              	 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 print:
