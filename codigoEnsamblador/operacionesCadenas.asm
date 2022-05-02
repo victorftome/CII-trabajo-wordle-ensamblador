@@ -85,10 +85,10 @@ leer_cadena_max:
 		cmpb	#32				; Si el caracter introducido es " ", comprobar si hay al menos
 		beq		dist_cero		; una letra introducida, para retirarla
 	
-		cmpb	#r				; Si el caracter introducido es "r", 
+		cmpb	#r				; Si el caracter introducido es "r", realizar la acción correspondiente
 		beq		codigo_r		;
 	
-		cmpb	#v				;
+		cmpb	#v				; Si el caracter introducido es "v", realizar la acción correspondiente
 		beq		codigo_v		;
 	
 		beq		no_codigo		; Si no es ningún caracter de control, guardar letra
