@@ -11,10 +11,10 @@
 ; Subrutinas a usar
 .globl	print
 .globl inicializar_juego
+.globl	int_to_char
 
 ; Variables globales
 .globl	palabras
-.globl	lineas_leidas
 
 cadena_menu:
 	.ascii "\n\n####################################\n"
@@ -61,7 +61,7 @@ salir:
 	rts
 
 comprobar_opcion:
-	cmpa	#'1					; Comprobamos la primera opcion
+	cmpa	#'1				; Comprobamos la primera opcion
 	beq		mostrar_diccionario	; Saltamos a la subrutina de mostrar diccionario
 
 	cmpa	#'2
@@ -84,12 +84,18 @@ mostrar_diccionario:
 	ldx	#palabras
 	jsr	print
 
-	lda	lineas_leidas
+	; Almacenamos B en el pila de usuario ya que el metodo print
+	; nos va a sobrescribir el numero de caracteres leidos
+	pshu	b
 
 	ldx	#cadena_num_palabras
 	jsr	print
 
-	ldd	lineas_leidas
+	; Recuperamos B
+	pulu	b
+
+	; Pasamos el numero en B a caracter
+	jsr	int_to_char
 
 	sta	0xFF00
 	stb	0xFF00

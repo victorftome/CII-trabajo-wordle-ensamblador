@@ -1,4 +1,5 @@
 #!/bin/bash
+
 for file in *.asm
     do
         as6809 -o $file

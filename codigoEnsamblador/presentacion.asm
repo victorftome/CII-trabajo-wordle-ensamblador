@@ -13,7 +13,7 @@
 
 ; Variables con la presentación a imprimir
 title:
-	.ascii "\33[37m"
+	.ascii "\33[2J\33[37m"
 	.ascii " ____ ____ ____ ____ ____ ____ \n"
 	.ascii "||\33[32mW\33[37m |||\33[32mO\33[37m |||\33[32mR\33[37m |||\33[33mD\33[37m |||\33[31mL\33[37m |||\33[31mE\33[37m ||\n"
 	.ascii "||__|||__|||__|||__|||__|||__||\n"

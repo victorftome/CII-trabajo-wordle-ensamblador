@@ -8,10 +8,8 @@
 
 ; Variables globales
 .globl	print
-.globl	lineas_leidas
+.globl	int_to_char
 
-
-lineas_leidas:	.word   0
 lcn_max:	.byte	4
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -20,12 +18,12 @@ lcn_max:	.byte	4
 ;                                                                                ;
 ;   Entrada: X-direccion de comienzo en la cadena                                ;
 ;   Salida: B-Número líneas mostradas                                            ;
-;   Registros afectados: X, CC.                                              	 ;
+;   Registros afectados: B, CC.                                              	 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 print:
-	pshu	a	; Almacenamos el contenido del registro a en la pila de usuario
-	clr	lineas_leidas
+	pshu	a,x	; Almacenamos el contenido del registro a en la pila de usuario
+	clrb
 
 next_char:
 	lda	,x+             ; Almacenamos el contenido de x en a y aumentamos el apuntador
@@ -35,30 +33,41 @@ next_char:
 	cmpa	#'\n ; Comprobamos que sea un final de linea
 	bne	next_char ; En caso de que no lo sea simplemente leemos el siguiente caracter
 
-	inc	lineas_leidas ; Incrementamos las lineas leidas, ya que hemos detectado un salto de linea
+	incb	; Incrementamos las lineas leidas, que almacenamos en b.
 	bra	next_char
 
 string_end:
 	; bra	lineas_leidas_to_char
-	pulu	a               ; Recuperamos el contenido de a
-    	rts
+	pulu	a,x	; Recuperamos el contenido de a
+	rts
 
-; Pasaremos las lineas leidas a caracter para poder representarlo correctamente
-lineas_leidas_to_char:
-	pshu	d
-	clra
-	clrb
-	ldb	lineas_leidas+1
-bucle:
-	inca
-	subb	#10
-	bhs	bucle
-	sta	lineas_leidas
-	addb	#58
-	stb	lineas_leidas+1
-	pulu	d
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   int_to_char                                                                  ;
+;       Pasa un numero entero de un maximo de dos cifras a caracter              ;
+;                                                                                ;
+;   Entrada: B-Número a pasar a caracteres                                       ;
+;   Salida: D-El número pasado a caracter                                        ;
+;   Registros afectados: D, CC.                                              	 ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+int_to_char:
+	clra	; Ponemos A a 0
 
-	bra	string_end
+bucle_div_10:
+	cmpb	#10	; Comprobamos que el numero restante en B sea menor que 10
+	blo		fin_itc	; En el caso de que sea menor que 10 es porque ya tenemos las unidades
+
+	subb	#10	; Restamos 10 a B
+	inca		; Incrementamos A, ya que A van a ser las decenas
+
+	bra		bucle_div_10
+
+fin_itc:
+	; Sumamos 48 a ambos registros.
+	; ya que en a tenemos las decenas y en b nos quedan las unidades
+	adda	#48
+	addb	#48
+
+	rts
 
 
 
@@ -74,52 +83,52 @@ bucle:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Inicio subrutina, utilizar psh u/s para recuperar valores que se hayan necesitado
-leer_cadena_max:
+;leer_cadena_max:
 	
-		lda		#0				; Poner A a 0, para el contador
-		ldb		teclado			; Cargar en B el valor introducido por el user
+;		lda		#0				; Poner A a 0, para el contador
+;		ldb		teclado			; Cargar en B el valor introducido por el user
 	
-		cmpb	#'\n			; Comprobar con el salto de línea y ver si ha metido 5 letras
-		beq		salto_linea		
+;		cmpb	#'\n			; Comprobar con el salto de línea y ver si ha metido 5 letras
+;		beq		salto_linea		
 		
-		cmpb	#32				; Si el caracter introducido es " ", comprobar si hay al menos
-		beq		dist_cero		; una letra introducida, para retirarla
+;		cmpb	#32				; Si el caracter introducido es " ", comprobar si hay al menos
+;		beq		dist_cero		; una letra introducida, para retirarla
 	
-		cmpb	#r				; Si el caracter introducido es "r", realizar la acción correspondiente
-		beq		codigo_r		;
+;		cmpb	#r				; Si el caracter introducido es "r", realizar la acción correspondiente
+;		beq		codigo_r		;
 	
-		cmpb	#v				; Si el caracter introducido es "v", realizar la acción correspondiente
-		beq		codigo_v		;
+;		cmpb	#v				; Si el caracter introducido es "v", realizar la acción correspondiente
+;		beq		codigo_v		;
 	
-		beq		no_codigo		; Si no es ningún caracter de control, guardar letra
+;		beq		no_codigo		; Si no es ningún caracter de control, guardar letra
 		
-	salto_linea:
+;	salto_linea:
 	
-		cmpa	lcn_max			; Si el contador de letras no es igual a 4 ignorar el
-		bne		leer_cadena_max	; salto de lína, pues la palabra no está completa
-		bra		fin_cadena_max	; Si el contador es 4, acabar la subrutina (del 0 al 4)
+;		cmpa	lcn_max			; Si el contador de letras no es igual a 4 ignorar el
+;		bne		leer_cadena_max	; salto de lína, pues la palabra no está completa
+;		bra		fin_cadena_max	; Si el contador es 4, acabar la subrutina (del 0 al 4)
 	
-	dist_cero:
+;	dist_cero:
 		
-		cmpa	#0				; Si no hay ninguna letra introducida, no hacer
-		beq		leer_cadena_max	; nada, y volver al inico de la subrutina
-		clr		,-x				; Borrar la última letra guardada y después
-		bra 	leer_cadena_max	; volver al inicio de la subrutina
+;		cmpa	#0				; Si no hay ninguna letra introducida, no hacer
+;		beq		leer_cadena_max	; nada, y volver al inico de la subrutina
+;		clr		,-x				; Borrar la última letra guardada y después
+;		bra 	leer_cadena_max	; volver al inicio de la subrutina
 		
-	codigo_r:
+;	codigo_r:
 		
 		
-	codigo_v:
+;	codigo_v:
 	
 	
-	no_codigo:
+;	no_codigo:
 	
-		cmpa	lcn_max			; Si ya hay 5 letras, no hacer nada
-		beq		leer_cadena_max	
-		stb		,x+				; Guardar lo que hay en B a X
-		inca					; Añadir 1 al contador en A
-		beq		leer_cadena_max
+;		cmpa	lcn_max			; Si ya hay 5 letras, no hacer nada
+;		beq		leer_cadena_max	
+;		stb		,x+				; Guardar lo que hay en B a X
+;		inca					; Añadir 1 al contador en A
+;		beq		leer_cadena_max
 	
 	
 	; Final de la subrutina, utilizar pul u/s para recuperar valores que se hayan necesitado
-	fin_cadena_max:
+;	fin_cadena_max:
