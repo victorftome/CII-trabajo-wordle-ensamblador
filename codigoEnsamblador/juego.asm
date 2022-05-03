@@ -229,7 +229,7 @@ bucle_ppc:
 	beq	fin_ppc
 
 fin_ppc:
-	lda	,-y
+	leay	-1,y
 
 	pulu	a
 	rts
