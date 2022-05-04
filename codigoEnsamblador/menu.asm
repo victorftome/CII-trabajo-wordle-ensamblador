@@ -12,15 +12,18 @@
 .globl	print
 .globl inicializar_juego
 .globl	int_to_char
+.globl	print_instrucciones
+.globl	pedir_confirmacion
 
 ; Variables globales
 .globl	palabras
 
 cadena_menu:
-	.ascii "\n\n####################################\n"
+	.ascii "\33[2J\33[H####################################\n"
 	.ascii "#        1) Ver diccionario        #\n"
 	.ascii "#        2) Jugar                  #\n"
-	.ascii "#        3) Salir                  #\n"
+	.ascii "#        3) Instrucciones          #\n"
+	.ascii "#        S) Salir                  #\n"
 	.asciz "####################################\n"
 
 cadena_solicitud_opcion:
@@ -68,6 +71,9 @@ comprobar_opcion:
 	beq		jugar
 
 	cmpa	#'3
+	beq		instrucciones
+
+	cmpa	#'S
 	beq		salir
 
 	ldx		#cadena_opcion_incorrecta
@@ -101,6 +107,13 @@ mostrar_diccionario:
 	stb	0xFF00
 
 	pulu	x,d
+
+	jsr	pedir_confirmacion
+
+	bra	print_menu
+
+instrucciones:
+	jsr	print_instrucciones
 	bra	print_menu
 
 jugar:
