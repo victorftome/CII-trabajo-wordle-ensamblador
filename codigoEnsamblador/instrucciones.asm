@@ -36,7 +36,8 @@ controles:
 	.ascii	"'especiales' que permitiran controlar el juego. Siendo estos los siguientes: \n"
 	.ascii	"\t\33[1mEspacio:\33[0m Al pulsar el espacio se borrara una letra introducida.\n"
 	.ascii	"\t\33[1mLetra 'r':\33[0m Al pulsar la letra r se reiniciara la partida.\n"
-	.asciz	"\t\33[1mLetra 'v':\33[0m Al pulsar la letra v se saldra del juego y se volvera al menu."
+	.ascii	"\t\33[1mLetra 'v':\33[0m Al pulsar la letra v se saldra del juego y se volvera al menu.\n"
+	.asciz	"\t\33[1mEnter:\33[0m Se comprobara la palabra indicada."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   print_instrucciones                                                          ;

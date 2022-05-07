@@ -9,3 +9,5 @@ aslink -s -m -w -u main.s19 *.rel
 
 rm *.rel
 rm *.map
+
+m6809-run main.s19

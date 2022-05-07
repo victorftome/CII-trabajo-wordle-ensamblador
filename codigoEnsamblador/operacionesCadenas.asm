@@ -42,6 +42,23 @@ string_end:
 	rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   print_char                                                                   ;
+;       Imprime por pantalla el caracter apuntado en y                           ;
+;                                                                                ;
+;   Entrada: Y-direccion del caracter a imprimir                                 ;
+;   Salida: Ninguna                                                              ;
+;   Registros afectados: CC.                                                     ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+print_char:
+	pshu	a,y
+
+	lda	,y
+	sta	0xFF00
+
+	pulu	a,y
+	rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   int_to_char                                                                  ;
 ;       Pasa un numero entero de un maximo de dos cifras a caracter              ;
 ;                                                                                ;
@@ -68,67 +85,3 @@ fin_itc:
 	addb	#48
 
 	rts
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;   leer_cadena_max								 ;
-;		Utilizado para leer una cadena de caracteres de máximo 5 letras	 ;
-;		Permitiendo la lectura de caracteres de "control" del programa	 ;
-;               La variable usada es: "lcn_max" para el contador		 ;
-;										 ;
-;   Entrada: X -> direccion de comienzo en la cadena                             ;
-;   Salida: Ninguna                                                              ;
-;   Registros afectados: CC, A, B                                                ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-; Inicio subrutina, utilizar psh u/s para recuperar valores que se hayan necesitado
-;leer_cadena_max:
-	
-;		lda		#0				; Poner A a 0, para el contador
-;		ldb		teclado			; Cargar en B el valor introducido por el user
-	
-;		cmpb	#'\n			; Comprobar con el salto de línea y ver si ha metido 5 letras
-;		beq		salto_linea		
-		
-;		cmpb	#32				; Si el caracter introducido es " ", comprobar si hay al menos
-;		beq		dist_cero		; una letra introducida, para retirarla
-	
-;		cmpb	#r				; Si el caracter introducido es "r", realizar la acción correspondiente
-;		beq		codigo_r		;
-	
-;		cmpb	#v				; Si el caracter introducido es "v", realizar la acción correspondiente
-;		beq		codigo_v		;
-	
-;		beq		no_codigo		; Si no es ningún caracter de control, guardar letra
-		
-;	salto_linea:
-	
-;		cmpa	lcn_max			; Si el contador de letras no es igual a 4 ignorar el
-;		bne		leer_cadena_max	; salto de lína, pues la palabra no está completa
-;		bra		fin_cadena_max	; Si el contador es 4, acabar la subrutina (del 0 al 4)
-	
-;	dist_cero:
-		
-;		cmpa	#0				; Si no hay ninguna letra introducida, no hacer
-;		beq		leer_cadena_max	; nada, y volver al inico de la subrutina
-;		clr		,-x				; Borrar la última letra guardada y después
-;		bra 	leer_cadena_max	; volver al inicio de la subrutina
-		
-;	codigo_r:
-		
-		
-;	codigo_v:
-	
-	
-;	no_codigo:
-	
-;		cmpa	lcn_max			; Si ya hay 5 letras, no hacer nada
-;		beq		leer_cadena_max	
-;		stb		,x+				; Guardar lo que hay en B a X
-;		inca					; Añadir 1 al contador en A
-;		beq		leer_cadena_max
-	
-	
-	; Final de la subrutina, utilizar pul u/s para recuperar valores que se hayan necesitado
-;	fin_cadena_max:

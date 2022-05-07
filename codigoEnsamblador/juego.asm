@@ -14,17 +14,18 @@ num_intentos	.equ	6 ; Varibale de referencia que va a almacenar el numero de int
 
 ; Informacion necesaria para el colocamiento del cursor
 initial_up_offset:	.asciz	"\033[3A"
+cursor_up_una_posicion:	.asciz	"\033[1A"
 cursor_up:	.asciz	"\033[4A"
 cursor_right:	.asciz	"\033[5C"
+cursor_left:	.asciz	"\033[6D"
 save_cursor_position:	.asciz	"\033[s"
 restore_cursor_position:	.asciz	"\033[u"
 
 ; Arreglo en el que vamos a almacenar las letras con los colores.
 ; Como los colores son una secuancia ANSI que ocupan 1 byte,
 ; por lo tanto son 6 palabras por 5 letras cada una nos da un total
-; de 30 letras a almacenar, como cada letra tiene que ir a compañada de su color
-; esto hara que tengamos que almacenar 30 * 2 = 60 caracteres + el caracter nulo 61 carateres
-cadena_palabras: .asciz "????????????????????????????????????????????????????????????"
+; de 30 letras a almacenar
+cadena_palabras: .asciz "??????????????????????????????"
 
 
 cabecera_juego:
@@ -124,7 +125,9 @@ rts_cc:
 pedir_palabra:
 	pshu	d,x
 	jsr	preparar_puntero_cadena
-	ldb	#5	; Vamos a usar el registro B como contador para pedir un maximo de 5 letras
+	ldb	#6	; Vamos a usar el registro B como contador para pedir un maximo de 6 caracteres
+			; Pedimos 6 carecteres ya que necesitamos las 5 letras de la palabra
+			; Y el ultimo caracter de control, confirmar, borrar, etc.
 
 bucle_pp:
 	tstb
@@ -136,11 +139,23 @@ bucle_pp:
 	tsta	; comprobamos que el caracter es incorrecto
 	beq	bucle_pp
 
-	decb	; Decrementamos el contaddor (registro B)
+	cmpa	#3
+	beq	eliminar_caracter_puntero_pp
+
+	decb	; Decrementamos el conta dor (registro B)
 	bra	correcto_pp
 
 correcto_pp:
 	sta	,y+	; Almacenamos a en la posicion de memoria que apunta Y, y aumentamos y.
+	bra	bucle_pp
+
+; Si se ha eliminado un caracter tenemos que eliminarlo tmb del puntero
+eliminar_caracter_puntero_pp
+	lda	#'?
+	sta	,-y
+
+	incb	; Incrementamos el contador ya que hemos eliminado un caracter
+
 	bra	bucle_pp
 
 rts_pp:
@@ -153,7 +168,10 @@ rts_pp:
 ;       correspondiente dependiendo del caracter introducido                     ;
 ;                                                                                ;
 ;   Entrada: A-El caracter introducido                                           ;
-;   Salida: A-El caracter en mayuscula si el caracter es valido, 0 si no lo es   ;
+;   Salida: A-El caracter en mayuscula si el caracter es valido, 0 si no lo es,  ;
+;           1 si se ha pulsado la 'v' para volver al menu, '2' si se ha pulsado  ;
+;           la 'r' para reiniciar la partida o '3' si se ha eliminado un caracter;
+;                                                                                ;
 ;   Registros afectados: A, CC                                                   ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 comprobar_caracter_introducido:
@@ -180,6 +198,12 @@ caracter_valido_mayuscula_cci:
 	bra	fin_cci
 
 caracter_valido_minuscula_cci:
+	cmpa	#'r
+	beq	prep_salir_menu_cci
+
+	cmpa	#'v
+	beq	prep_reiniciar_cci
+
 	suba	#32	; Le restamos a A 32 para pasarlo a mayuscula
 
 	ldb	#8	; Retrocedemos una posicion
@@ -194,17 +218,73 @@ caracter_valido_minuscula_cci:
 
 	bra	fin_cci
 
+prep_salir_menu_cci:
+	lda	#1
+	bra	fin_cci
+
+prep_reiniciar_cci:
+	lda	#2
+	bra	fin_cci
+
 caracter_no_valido_cci:
-	lda	#8	; Volvemos a la posicion anterior
-	sta	0xFF00
+	cmpa	#10
+	beq	tecla_enter_pulsada
 
-	lda	#'?	; Sustituimos el caracter introducido por el usuario por la interrogacion
-	sta	0xFF00
+	pshu	b
 
-	lda	#8	; Volvemos a la posicion anterior para el proximo caracter a introducir del usuario
-	sta	0xFF00
+	ldb	#8	; Volvemos a la posicion anterior
+	stb	0xFF00
+
+	ldb	#'?	; Sustituimos el caracter introducido por el usuario por la interrogacion
+	stb	0xFF00
+
+	ldb	#8	; Volvemos a la posicion anterior para el proximo caracter a introducir del usuario
+	stb	0xFF00
+
+	pulu	b
+
+	cmpa	#32
+	beq	borrar_caracter_cci
 
 	clra
+
+	bra	fin_cci
+
+borrar_caracter_cci:
+	cmpb	#6
+	bne	cursor_izquierda_cci
+
+	ldb	#'?
+	stb	0xFF00
+
+	ldb	#8
+	stb	0xFF00
+
+	clra
+
+	bra	fin_cci
+
+cursor_izquierda_cci:
+	ldx	#cursor_left
+	jsr	print
+
+	ldb	#'?
+	stb	0xFF00
+
+	ldb	#8
+	stb	0xFF00
+
+	lda	#3
+
+tecla_enter_pulsada:
+	ldx	#cursor_up_una_posicion
+	jsr	print
+
+	ldx	#cursor_right
+	jsr	print
+
+	clra
+
 fin_cci:
 	pulu	b,x
 	rts
