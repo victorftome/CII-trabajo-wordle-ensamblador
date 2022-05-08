@@ -16,6 +16,7 @@ num_intentos	.equ	6 ; Varibale de referencia que va a almacenar el numero de int
 initial_up_offset:	.asciz	"\033[3A"
 cursor_up_una_posicion:	.asciz	"\033[1A"
 cursor_up:	.asciz	"\033[4A"
+cursor_right_sin_caracter:	.asciz	"\033[6C"
 cursor_right:	.asciz	"\033[5C"
 cursor_left:	.asciz	"\033[6D"
 save_cursor_position:	.asciz	"\033[s"
@@ -142,7 +143,7 @@ bucle_pp:
 	cmpa	#3
 	beq	eliminar_caracter_puntero_pp
 
-	decb	; Decrementamos el conta dor (registro B)
+	decb	; Decrementamos el contador (registro B)
 	bra	correcto_pp
 
 correcto_pp:
@@ -150,7 +151,7 @@ correcto_pp:
 	bra	bucle_pp
 
 ; Si se ha eliminado un caracter tenemos que eliminarlo tmb del puntero
-eliminar_caracter_puntero_pp
+eliminar_caracter_puntero_pp:
 	lda	#'?
 	sta	,-y
 
@@ -167,10 +168,12 @@ rts_pp:
 ;       Se encarga de comprobar el carcter escrito y llamar a la subrutina       ;
 ;       correspondiente dependiendo del caracter introducido                     ;
 ;                                                                                ;
-;   Entrada: A-El caracter introducido                                           ;
+;   Entrada: A-El caracter introducido, B-El numero del caracter introducido     ;
 ;   Salida: A-El caracter en mayuscula si el caracter es valido, 0 si no lo es,  ;
 ;           1 si se ha pulsado la 'v' para volver al menu, '2' si se ha pulsado  ;
-;           la 'r' para reiniciar la partida o '3' si se ha eliminado un caracter;
+;           la 'r' para reiniciar la partida, '3' si se ha eliminado un caracter ;
+;           o 4 si se ha pulsado enter y era la ultima posicion, para comprobar  ;
+;           la palabra                                                           ;
 ;                                                                                ;
 ;   Registros afectados: A, CC                                                   ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -178,24 +181,27 @@ comprobar_caracter_introducido:
 	pshu	b,x
 
 	cmpa	#65	; Comprobamos que es un caracter no valido (por debajo de A)
-	blo	caracter_no_valido_cci
+	lblo	caracter_no_valido_cci
 
 	cmpa	#90
-	bls	caracter_valido_mayuscula_cci
+	lbls	caracter_valido_mayuscula_cci
 
 	cmpa	#97
-	blo	caracter_no_valido_cci
+	lblo	caracter_no_valido_cci
 
 	cmpa	#122
-	bls	caracter_valido_minuscula_cci
+	lbls	caracter_valido_minuscula_cci
 
-	bra	caracter_no_valido_cci
+	lbra	caracter_no_valido_cci
 
 caracter_valido_mayuscula_cci:
+	cmpb	#1
+	beq	caracter_no_valido_cci
+
 	ldx	#cursor_right
 	jsr	print
 
-	bra	fin_cci
+	lbra	fin_cci
 
 caracter_valido_minuscula_cci:
 	cmpa	#'r
@@ -203,6 +209,9 @@ caracter_valido_minuscula_cci:
 
 	cmpa	#'v
 	beq	prep_reiniciar_cci
+
+	cmpb	#1
+	beq	caracter_no_valido_cci
 
 	suba	#32	; Le restamos a A 32 para pasarlo a mayuscula
 
@@ -216,7 +225,7 @@ caracter_valido_minuscula_cci:
 	ldx	#cursor_right
 	jsr	print
 
-	bra	fin_cci
+	lbra	fin_cci
 
 prep_salir_menu_cci:
 	lda	#1
@@ -252,7 +261,7 @@ caracter_no_valido_cci:
 
 borrar_caracter_cci:
 	cmpb	#6
-	bne	cursor_izquierda_cci
+	bne	cursor_izquierda_cci	; Si no es el primer caracter movemos el cursor a la izquierda
 
 	ldb	#'?
 	stb	0xFF00
@@ -276,17 +285,61 @@ cursor_izquierda_cci:
 
 	lda	#3
 
-tecla_enter_pulsada:
-	ldx	#cursor_up_una_posicion
-	jsr	print
+	bra	fin_cci
 
-	ldx	#cursor_right
-	jsr	print
+tecla_enter_pulsada:
+	cmpb	#1
+	beq	guardar_palabra
+
+	jsr	colocar_cursor_en_fila
 
 	clra
 
+	bra	fin_cci
+guardar_palabra:
+	lda	#4
+	bra	fin_cci
+
 fin_cci:
 	pulu	b,x
+	rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   colocar_cursor_en_pila                                                       ;
+;       Subrutine que nos coloca el puntero en fila dependiendo de los caracteres;
+;       ya introduccidos                                                         ;
+;                                                                                ;
+;   Entrada: B-El numero del caracter que estamos introducciendo                 ;
+;   Salida: Ninguna                                                              ;
+;   Registros afectados: CC                                                      ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+colocar_cursor_en_fila:
+	pshu	a,b,x
+
+	tfr	b,a	; A tiene la posicion actual del caracter introducido
+
+	ldx	#cursor_up_una_posicion	; Movemos el cursor la posicion superior que ha bajado el enter
+	jsr	print
+
+	ldb	#8	; Retrocedemos una posicion para eliminar el caracter escrito
+	stb	0xFF00
+
+	ldx	#cursor_right	; Movemos el cursor 5 caracteres a la derecha
+	jsr	print
+
+	ldx	#cursor_right_sin_caracter	; Cargamos x para mover el caracter 6 caracteres a la derecha
+bucle_ccef:
+	cmpa	#6	; mientras a sea diferente de 6 ejecutamos
+	beq	fin_ccef
+
+	jsr	print	; movemos el cursor
+
+	inca
+
+	bra	bucle_ccef
+
+fin_ccef:
+	pulu	a,b,x
 	rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
