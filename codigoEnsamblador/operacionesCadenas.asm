@@ -9,6 +9,7 @@
 ; Variables globales
 .globl	print
 .globl	int_to_char
+.globl	palabras
 
 lcn_max:	.byte	4
 
@@ -84,4 +85,43 @@ fin_itc:
 	adda	#48
 	addb	#48
 
+	rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   comprobar_palabra_existente                                                  ;
+;       Comprueba que la palabra introducida por el usuario existe               ;
+;       en el diccionario                                                        ;
+;                                                                                ;
+;   Entrada: X-La direccion de memoria al primer caracter de la palabra          ;
+;            introducida por el usuario.                                         ;
+;                                                                                ;
+;   Salida: A-Un 0 si la palabra no se encuentra en el diccionario y un 1 si se  ;
+;           ha encontrado                                                        ;
+;                                                                                ;
+;   Registros afectados: CC.                                                     ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+comprobar_palabra_existente:
+	ldy	#palabras
+
+bucle_comprobar_existencia_cpe:
+	lda	,y+	; Cargamos en A el caracter apuntado por Y y avanzamos el puntero.
+
+	cmpa	,x+	; Comparamos el contenido de A con el contenido de B, es decir, los caracteres
+	beq	bucle_comprobar_existencia_cpe	; si son iguales comprobamos el siguiente caracter
+	bne	comprobar_salida_cpe	; Aqui vamos a comprobar si se ha llegado a este salto porque las palabras
+							; son diferentes, o porque se ha acabado de leer la palabra contenido en y,
+							; llegando a un \n
+
+comprobar_salida_cpe:
+	cmpa	#'\n	; En caso de haber llegado a un \n simplemente reiniciaremos el puntero X y continuaremos con las comprobaciones
+	beq	reinicar_puntero_x_cpe
+
+	cmpa	#'\0	; En caso de haber llegado a un \0 querra decir que ya se han acabado de leer todas las palabras del diccionario
+	beq	
+
+reinicar_puntero_x_cpe:
+	leax	-6,x
+	bra	bucle_comprobar_existencia_cpe
+
+fin_cpe:
 	rts

@@ -94,6 +94,9 @@ mostrar_diccionario:
 	; nos va a sobrescribir el numero de caracteres leidos
 	pshu	b
 
+	ldb	#'\n
+	stb	0xFF00
+
 	ldx	#cadena_num_palabras
 	jsr	print
 

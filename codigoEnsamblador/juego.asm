@@ -143,6 +143,9 @@ bucle_pp:
 	cmpa	#3
 	beq	eliminar_caracter_puntero_pp
 
+	cmpa	#4
+	beq	rts_pp
+
 	decb	; Decrementamos el contador (registro B)
 	bra	correcto_pp
 
