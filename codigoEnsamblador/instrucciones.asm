@@ -28,7 +28,7 @@ instrucciones:
 	.ascii	"\t\t\33[33m\33[1mAmarillo:\33[0m La letra introducida se encuentra en la palabra secreta\n"
 	.ascii 	"\t\tpero en otra posicion a la introducida.\n"
 
-	.asciz	"\t\t\33[1mBlanco:\33[0mLa letra introducida no se encuentra en la palabra secreta.\n\n"
+	.asciz	"\t\t\33[31m\33[1mRojo:\33[0m La letra introducida no se encuentra en la palabra secreta.\n\n"
 
 controles:
 	.ascii	"\33[1mCaracteres especiales: \33[0m\n"

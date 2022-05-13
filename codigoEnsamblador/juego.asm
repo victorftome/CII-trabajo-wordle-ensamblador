@@ -8,6 +8,7 @@
 
 .globl	print
 .globl	inicializar_juego
+.globl	comprobar_palabra_existente
 
 ; Variables
 num_intentos	.equ	6 ; Varibale de referencia que va a almacenar el numero de intentos
@@ -144,10 +145,22 @@ bucle_pp:
 	beq	eliminar_caracter_puntero_pp
 
 	cmpa	#4
-	beq	rts_pp
+	beq	iniciar_comprobaciones_pp
 
 	decb	; Decrementamos el contador (registro B)
 	bra	correcto_pp
+
+iniciar_comprobaciones_pp:
+	tfr	y,x
+	leax	-5,x
+
+	jsr	comprobar_palabra_existente
+
+	adda	#65
+	sta	0xFF00
+
+	bra	rts_pp
+
 
 correcto_pp:
 	sta	,y+	; Almacenamos a en la posicion de memoria que apunta Y, y aumentamos y.

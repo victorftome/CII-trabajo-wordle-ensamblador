@@ -20,5 +20,5 @@ palabras:
 	.ascii	"OVEJA\n"
 	.ascii	"PERRO\n"
 	.ascii	"PANDA\n"
-	.ascii	"KOALA"
+	.ascii	"KOALA\n"
 	.byte	0

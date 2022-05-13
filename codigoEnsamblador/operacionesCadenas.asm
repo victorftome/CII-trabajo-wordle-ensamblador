@@ -10,6 +10,7 @@
 .globl	print
 .globl	int_to_char
 .globl	palabras
+.globl	comprobar_palabra_existente
 
 lcn_max:	.byte	4
 
@@ -100,7 +101,12 @@ fin_itc:
 ;                                                                                ;
 ;   Registros afectados: CC.                                                     ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+dir_inicio_palabra:	.word	0	;,Variable sobre la que nos apollamos para almacenar la direccion de memoria del primer
+					; caracter de la palabra introducida por el usuario.
+
 comprobar_palabra_existente:
+	pshu	y,b
+	stx	dir_inicio_palabra
 	ldy	#palabras
 
 bucle_comprobar_existencia_cpe:
@@ -108,20 +114,34 @@ bucle_comprobar_existencia_cpe:
 
 	cmpa	,x+	; Comparamos el contenido de A con el contenido de B, es decir, los caracteres
 	beq	bucle_comprobar_existencia_cpe	; si son iguales comprobamos el siguiente caracter
-	bne	comprobar_salida_cpe	; Aqui vamos a comprobar si se ha llegado a este salto porque las palabras
-							; son diferentes, o porque se ha acabado de leer la palabra contenido en y,
-							; llegando a un \n
 
+; Aqui vamos a comprobar si se ha llegado a este salto porque las palabras
+; son diferentes, o porque se ha acabado de leer la palabra contenido en y,
+; llegando a un \n
 comprobar_salida_cpe:
-	cmpa	#'\n	; En caso de haber llegado a un \n simplemente reiniciaremos el puntero X y continuaremos con las comprobaciones
-	beq	reinicar_puntero_x_cpe
+	cmpa	#'\n	; En caso de haber llegado a un \n querra decir que se ha llegado al final de una palabra
+			; Por tanto la palabra existe en el diccionario
+	beq	palabra_valida_cpe
 
 	cmpa	#'\0	; En caso de haber llegado a un \0 querra decir que ya se han acabado de leer todas las palabras del diccionario
-	beq	
+	beq	palabra_no_valida
 
-reinicar_puntero_x_cpe:
-	leax	-6,x
-	bra	bucle_comprobar_existencia_cpe
+preparar_siguiente_palabra_cpe:
+	ldx	dir_inicio_palabra	; Hacemos q x apunte otra vez al inicio de la palabra
+
+bucle_prepara_siguiente_palabra_cpe:
+	lda	,y+	; seguimos recorriendo y hasta que demos con un \n
+	cmpa	#'\n
+	beq	bucle_comprobar_existencia_cpe
+	bra	bucle_prepara_siguiente_palabra_cpe
+
+palabra_valida_cpe:
+	lda	#1
+	bra	fin_cpe
+
+palabra_no_valida:
+	clra
 
 fin_cpe:
+	pulu	y,b
 	rts
