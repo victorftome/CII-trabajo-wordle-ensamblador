@@ -124,9 +124,8 @@ comprobar_salida_cpe:
 	beq	palabra_valida_cpe
 
 	cmpa	#'\0	; En caso de haber llegado a un \0 querra decir que ya se han acabado de leer todas las palabras del diccionario
-	beq	palabra_no_valida
+	beq	palabra_no_valida	; por lo tanto no hemos llegado a ningun \n en ningun momento, la palabra no esta en el diccionario
 
-preparar_siguiente_palabra_cpe:
 	ldx	dir_inicio_palabra	; Hacemos q x apunte otra vez al inicio de la palabra
 
 bucle_prepara_siguiente_palabra_cpe:
@@ -136,11 +135,11 @@ bucle_prepara_siguiente_palabra_cpe:
 	bra	bucle_prepara_siguiente_palabra_cpe
 
 palabra_valida_cpe:
-	lda	#1
+	lda	#1	; Establecemos A a 1
 	bra	fin_cpe
 
 palabra_no_valida:
-	clra
+	clra	; Ponemos A a 0
 
 fin_cpe:
 	pulu	y,b

@@ -12,6 +12,7 @@
 
 ; Variables
 num_intentos	.equ	6 ; Varibale de referencia que va a almacenar el numero de intentos
+palabra_secreta:	.asciz	"MOSCA"	; Variable en la que guardar la palabra a adivinar
 
 ; Informacion necesaria para el colocamiento del cursor
 initial_up_offset:	.asciz	"\033[3A"
@@ -23,17 +24,17 @@ cursor_left:	.asciz	"\033[6D"
 save_cursor_position:	.asciz	"\033[s"
 restore_cursor_position:	.asciz	"\033[u"
 
-; Arreglo en el que vamos a almacenar las letras con los colores.
-; Como los colores son una secuancia ANSI que ocupan 1 byte,
+; Arreglo en el que vamos a almacenar las palabras introducidas
 ; por lo tanto son 6 palabras por 5 letras cada una nos da un total
 ; de 30 letras a almacenar
-cadena_palabras: .asciz "??????????????????????????????"
+cadena_palabras: 	.asciz	"??????????????????????????????"
+colores_palabras:	.asciz	"??????????????????????????????"
 
 
 cabecera_juego:
 	.asciz	"\33[2J\33[H            W O R D L E\n\n"
 
-columna_juego:
+fila_juego:
 	.ascii	"    ###   ###   ###   ###   ###\n"
 	.ascii	"    #?#   #?#   #?#   #?#   #?#\n"
 	.asciz	"    ###   ###   ###   ###   ###\n\n"
@@ -42,7 +43,7 @@ inicializar_juego:
 	ldx	#cabecera_juego
 	jsr	print
 	lda	#1	; Inicializamos el registro A a 1
-	ldx	#columna_juego 	; Preparamos la columna en x para imprimirla posteriormente
+	ldx	#fila_juego 	; Preparamos la columna en x para imprimirla posteriormente
 
 ; En este bucle imprimimos todas las columnas, que son equivalente al numero de intentos
 bucle_columnas:
@@ -68,8 +69,14 @@ jugar:
 	ldx	#restore_cursor_position
 	jsr	print
 
-	; DEBUG ELIMINAR INICIO
+	; TODO DEBUG ELIMINAR INICIO
 	ldx	#cadena_palabras
+	jsr	print
+
+	ldb	#'\n
+	stb	0xFF00
+
+	ldx	#colores_palabras
 	jsr	print
 	; DEBUG ELIMINAR FIN
 
@@ -156,11 +163,17 @@ iniciar_comprobaciones_pp:
 
 	jsr	comprobar_palabra_existente
 
-	adda	#65
-	sta	0xFF00
+	tsta
+	beq	palabra_no_valida_pp
+	bra	palabra_valida_pp
 
+palabra_no_valida_pp:
+	jsr	colocar_cursor_en_fila
+	bra	bucle_pp
+
+palabra_valida_pp:
+	jsr	comprobar_palabra_introducida
 	bra	rts_pp
-
 
 correcto_pp:
 	sta	,y+	; Almacenamos a en la posicion de memoria que apunta Y, y aumentamos y.
@@ -322,10 +335,10 @@ fin_cci:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   colocar_cursor_en_pila                                                       ;
-;       Subrutine que nos coloca el puntero en fila dependiendo de los caracteres;
+;       Subrutina que nos coloca el puntero en fila dependiendo de los caracteres;
 ;       ya introduccidos                                                         ;
 ;                                                                                ;
-;   Entrada: B-El numero del caracter que estamos introducciendo                 ;
+;   Entrada: B-El numero del caracter que estamos introduciendo                  ;
 ;   Salida: Ninguna                                                              ;
 ;   Registros afectados: CC                                                      ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -377,8 +390,138 @@ bucle_ppc:
 	cmpa	#'?
 	beq	fin_ppc
 
+	cmpa	#'\0
+	beq	fin_ppc
+
+	bra	bucle_ppc
+
 fin_ppc:
 	leay	-1,y
 
 	pulu	a
+	rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   comprobar_palabra_introducida                                                ;
+;       En esta subrutina se comprobara la palabra introducida con la palabra    ;
+;       secreta, sacar los colores y comprobar que se ha acertado o no.          ;
+;                                                                                ;
+;   Entrada: Ninguna                                                             ;
+;   Salida: Ninguna                                                              ;
+;   Registros afectados: CC                                                      ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+comprobar_palabra_introducida:
+	pshs	x,y,a,b
+
+	clrb	; Hacemos q b sea 0 ya que lo usaremos de contador
+	ldx	#palabra_secreta
+	jsr	apuntar_ultima_palabra
+
+bucle_comprobar_letras_dif_pos:
+	lda	,x+
+	cmpa	,y	; Vamos comparando el caracter de nuestra palabra con el de la palabra secreta
+	beq	poner_amarillo_cpi	; En el caso de ser iguales los ponemos a amarillo
+
+	cmpa	#'\0	; Comprobamos que haya llegado al final de la palabra
+	bne	bucle_comprobar_letras_dif_pos
+
+	; Incrementamos B
+	incb
+	leay	1,y
+
+	cmpb	#5	; Comprobamos que B es menor o igual q 0
+	ble	bucle_comprobar_letras_dif_pos
+
+	; En caso contrario preparamos para siguiente bucle (comprobar misma posicion)
+	ldx	#palabra_secreta
+	jsr	apuntar_ultima_palabra
+
+	clrb
+
+bucle_comprobar_letras_misma_pos:
+	cmpb	#5
+	beq	rts_cpi
+
+	lda	,x+
+	cmpa	,y+
+	beq	poner_verde_cpi	; comprobamos que son iguales, si lo son ponemos el color a verde
+
+	incb	; Aumentamos el contador del b (para saber la posicion en la que tenemos que establecer el color)
+
+	; Comprobamos que A no vale ni ? ni \0
+	; ya que en ese caso ya habriamos leido todos los caracteres
+	cmpa	#'?
+	bne	bucle_comprobar_letras_misma_pos
+
+	cmpa	#'\0
+	bne	bucle_comprobar_letras_misma_pos
+
+	bra	rts_cpi
+
+poner_rojo_cpi:
+	lda	#2
+	jsr	poner_color
+	bra	bucle_comprobar_letras_dif_pos
+
+poner_amarillo_cpi:
+	lda	#1
+	jsr	poner_color
+	bra	bucle_comprobar_letras_dif_pos
+
+poner_verde_cpi:
+	lda	#0
+	jsr	poner_color
+	bra	bucle_comprobar_letras_misma_pos
+
+rts_cpi:
+	puls	x,y,a,b
+	rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   apuntar_ultima_palabra                                                       ;
+;       En esta subrutina se almacenara en Y la direccion de inicio a la ultima  ;
+;       palabra introducida                                                      ;
+;                                                                                ;
+;   Entrada: B-Posicion a insertarlo                                             ;
+;   Salida: Ninguna.                                                             ;
+;   Registros afectados: CC                                                      ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+poner_color:
+	pshu	y,a	; Usaremos Y para recorrer el vector donde almacenar los colores
+
+	ldy	#colores_palabras
+
+	lda	#6
+	suba	#num_intentos	; Cargamos A con 6 y le restamos el intento actual (asi sabremos los caracteres que tenemos q avanzar)
+
+	pshu	b
+
+	ldb	#6		; Cargamos B con el numero de intentos totales
+	mul			; Multiplicamos A por B asi tendremos las posicion a avanzar en D
+	leay	b,y		; Avanzamos el puntero Y las posiciones calculadas
+
+	pulu	b
+
+	leay	b,y
+
+	sta	,y	; Almacenamos en la posicion de la letra el color verde, ya que b lleva la posicion de la letra
+
+	pulu	y,a
+
+	rts
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   apuntar_ultima_palabra                                                       ;
+;       En esta subrutina se almacenara en Y la direccion de inicio a la ultima  ;
+;       palabra introducida                                                      ;
+;                                                                                ;
+;   Entrada: Ninguna                                                             ;
+;   Salida: Y apuntara a la ultima palabra introducida                           ;
+;   Registros afectados: CC                                                      ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+apuntar_ultima_palabra:
+	jsr	preparar_puntero_cadena	; Preparamos el puntero para que apunte a caracter a continuacion de la palabra a tomar
+	leay	-5,y			; Apuntamos al inicio de la nueva palabra
+
 	rts
