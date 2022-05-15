@@ -21,7 +21,7 @@
 cadena_menu:
 	.ascii "\33[2J\33[H####################################\n"
 	.ascii "#        1) Ver diccionario        #\n"
-	.ascii "#        2) Jugar                  #\n"
+	.ascii "#        2) jugar                  #\n"
 	.ascii "#        3) Instrucciones          #\n"
 	.ascii "#        S) Salir                  #\n"
 	.asciz "####################################\n"
@@ -68,7 +68,7 @@ comprobar_opcion:
 	beq		mostrar_diccionario	; Saltamos a la subrutina de mostrar diccionario
 
 	cmpa	#'2
-	beq		jugar
+	beq		jugar_menu
 
 	cmpa	#'3
 	beq		instrucciones
@@ -116,6 +116,6 @@ instrucciones:
 	jsr	print_instrucciones
 	bra	print_menu
 
-jugar:
+jugar_menu:
 	jsr	inicializar_juego
 	bra	salir

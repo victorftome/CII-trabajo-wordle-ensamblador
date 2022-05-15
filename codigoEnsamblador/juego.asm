@@ -11,8 +11,9 @@
 .globl	comprobar_palabra_existente
 
 ; Variables
-num_intentos	.equ	6 ; Varibale de referencia que va a almacenar el numero de intentos
-palabra_secreta:	.asciz	"MOSCA"	; Variable en la que guardar la palabra a adivinar
+intentos_totales	.equ	6 ; Varibale de referencia que va a almacenar el numero de intentos
+num_intentos:	.byte	6
+palabra_secreta:	.asciz	"CISNE"	; Variable en la que guardar la palabra a adivinar
 
 ; Informacion necesaria para el colocamiento del cursor
 initial_up_offset:	.asciz	"\033[3A"
@@ -24,11 +25,18 @@ cursor_left:	.asciz	"\033[6D"
 save_cursor_position:	.asciz	"\033[s"
 restore_cursor_position:	.asciz	"\033[u"
 
+; Informacion para los colores
+color_rojo:	.asciz	"\33[31m"
+color_verde:	.asciz	"\33[32m"
+color_amarillo:	.asciz	"\33[33m"
+color_blanco:	.asciz	"\33[37m"
+
+
 ; Arreglo en el que vamos a almacenar las palabras introducidas
 ; por lo tanto son 6 palabras por 5 letras cada una nos da un total
 ; de 30 letras a almacenar
 cadena_palabras: 	.asciz	"??????????????????????????????"
-colores_palabras:	.asciz	"??????????????????????????????"
+colores_palabras:	.asciz	"222222222222222222222222222222"
 
 
 cabecera_juego:
@@ -39,6 +47,15 @@ fila_juego:
 	.ascii	"    #?#   #?#   #?#   #?#   #?#\n"
 	.asciz	"    ###   ###   ###   ###   ###\n\n"
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   inicializar_juego                                                            ;
+;       Se encarga de realizar y llamar a todas las subrutinar                   ;
+;       necesarias para ejecutar el juego                                        ;
+;                                                                                ;
+;   Entrada: Ninguna                                                             ;
+;   Salida: Ninguna                                                              ;
+;   Registros afectados: CC                                                      ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 inicializar_juego:
 	ldx	#cabecera_juego
 	jsr	print
@@ -47,29 +64,40 @@ inicializar_juego:
 
 ; En este bucle imprimimos todas las columnas, que son equivalente al numero de intentos
 bucle_columnas:
-	cmpa	#num_intentos	; Comprobamos que el registro A sea menor o igual al numero de intentos
+	cmpa	#intentos_totales	; Comprobamos que el registro A sea menor o igual al numero de intentos
 	bhi	jugar		; En caso de ser mayor o igual podemos iniciar el juego
 	jsr	print		; Sacamos la columna por pantalla
 	inca
 	bra	bucle_columnas
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;   Jugar                                                                        ;
-;       Se encarga de realizar y llamar a todas las subrutinar                   ;
-;       necesarias para ejecutar el juego                                        ;
-;                                                                                ;
-;   Entrada: Ninguna                                                             ;
-;   Salida: Ninguna                                                              ;
-;   Registros afectados: CC                                                      ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 jugar:
+	ldx	#save_cursor_position
+	jsr	print
+
+bucle_pedir_palabras_j:
+	ldb	num_intentos
 	jsr	colorcar_cursor	; Llamamos a la subrutina para colocar el cursor verticalmente
 	jsr	pedir_palabra	; Llamamos a la subrutina para pedir la palabra
+
+	dec	num_intentos
 
 	ldx	#restore_cursor_position
 	jsr	print
 
+	jsr	imprimir_palabras_intentadas
+
+	ldx	#restore_cursor_position
+	jsr	print
+
+	ldb	num_intentos
+	cmpb	#0
+	bne	bucle_pedir_palabras_j
+
 	; TODO DEBUG ELIMINAR INICIO
+	ldb	#'\n
+	stb	0xFF00
+	ldb	#'\n
+	stb	0xFF00
 	ldx	#cadena_palabras
 	jsr	print
 
@@ -87,17 +115,14 @@ jugar:
 ;       Se encarga de color el cursor verticalmente dependiendo del intento      ;
 ;       en el que nos encontremos                                                ;
 ;                                                                                ;
-;   Entrada: Ninguna                                                             ;
+;   Entrada: B-La fila a posicionarse                                            ;
 ;   Salida: Ninguna                                                              ;
 ;   Registros afectados: CC                                                      ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 colorcar_cursor:
-	pshu	a
+	pshu	a,x,b
 
-	ldx	#save_cursor_position	; Guardamos la posicion inicial de cursor para recuperarla mas tarde.
-	jsr	print
-
-	lda	#num_intentos		; Cargamos en a el numero de intentos que tenemos
+	tfr	b,a
 
 	ldx	#initial_up_offset	; Movemos el cursor el offset inicial, ya que no es del mismo numero de posiciones que para
 					; avanzar de columna en columna
@@ -118,7 +143,7 @@ rts_cc:
 	ldx	#cursor_right ; Por ultimo movemos el cursor una posicion a la derecha para iniciar la solicitud de la palabra
 	jsr	print
 
-	pulu	a
+	pulu	a,x,b
 	rts
 
 
@@ -429,47 +454,40 @@ bucle_comprobar_letras_dif_pos:
 	incb
 	leay	1,y
 
+	ldx	#palabra_secreta
+
 	cmpb	#5	; Comprobamos que B es menor o igual q 0
-	ble	bucle_comprobar_letras_dif_pos
+	blo	bucle_comprobar_letras_dif_pos
 
 	; En caso contrario preparamos para siguiente bucle (comprobar misma posicion)
 	ldx	#palabra_secreta
 	jsr	apuntar_ultima_palabra
 
-	clrb
+	ldb	#-1
 
 bucle_comprobar_letras_misma_pos:
-	cmpb	#5
-	beq	rts_cpi
-
+	incb
 	lda	,x+
 	cmpa	,y+
 	beq	poner_verde_cpi	; comprobamos que son iguales, si lo son ponemos el color a verde
 
-	incb	; Aumentamos el contador del b (para saber la posicion en la que tenemos que establecer el color)
-
 	; Comprobamos que A no vale ni ? ni \0
 	; ya que en ese caso ya habriamos leido todos los caracteres
 	cmpa	#'?
-	bne	bucle_comprobar_letras_misma_pos
+	beq	rts_cpi
 
 	cmpa	#'\0
-	bne	bucle_comprobar_letras_misma_pos
+	beq	rts_cpi
 
-	bra	rts_cpi
-
-poner_rojo_cpi:
-	lda	#2
-	jsr	poner_color
-	bra	bucle_comprobar_letras_dif_pos
+	bra	bucle_comprobar_letras_misma_pos
 
 poner_amarillo_cpi:
-	lda	#1
+	lda	#'1
 	jsr	poner_color
 	bra	bucle_comprobar_letras_dif_pos
 
 poner_verde_cpi:
-	lda	#0
+	lda	#'0
 	jsr	poner_color
 	bra	bucle_comprobar_letras_misma_pos
 
@@ -478,7 +496,7 @@ rts_cpi:
 	rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;   apuntar_ultima_palabra                                                       ;
+;   poner_color                                                                  ;
 ;       En esta subrutina se almacenara en Y la direccion de inicio a la ultima  ;
 ;       palabra introducida                                                      ;
 ;                                                                                ;
@@ -491,18 +509,30 @@ poner_color:
 
 	ldy	#colores_palabras
 
-	lda	#6
-	suba	#num_intentos	; Cargamos A con 6 y le restamos el intento actual (asi sabremos los caracteres que tenemos q avanzar)
+	pshu	a
+
+	lda	#intentos_totales
+	suba	num_intentos	; Cargamos A con 6 y le restamos el intento actual (asi sabremos los caracteres que tenemos q avanzar)
 
 	pshu	b
 
-	ldb	#6		; Cargamos B con el numero de intentos totales
+	ldb	#intentos_totales	; Cargamos B con el numero de intentos totales
 	mul			; Multiplicamos A por B asi tendremos las posicion a avanzar en D
+
 	leay	b,y		; Avanzamos el puntero Y las posiciones calculadas
+
+	; Las palabras al ser de tamaño 5 e ir de 0-5 | 5 - 10 etc necesitamos decrementar el numero de intentos que llevamos al puntero
+	; ya que la multiplicacion ira tal que 0-6 | 0-12 | etc.
+	ldb	num_intentos
+	subb	#intentos_totales
+
+	leay	b,y
 
 	pulu	b
 
 	leay	b,y
+
+	pulu	a
 
 	sta	,y	; Almacenamos en la posicion de la letra el color verde, ya que b lleva la posicion de la letra
 
@@ -524,4 +554,98 @@ apuntar_ultima_palabra:
 	jsr	preparar_puntero_cadena	; Preparamos el puntero para que apunte a caracter a continuacion de la palabra a tomar
 	leay	-5,y			; Apuntamos al inicio de la nueva palabra
 
+	rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   imprimir_palabras_intentadas                                                 ;
+;       En esta subrutina se encargara de mostrar las palabras intentadas con sus;
+;       respectivos colores                                                      ;
+;                                                                                ;
+;   Entrada: Ninguna                                                             ;
+;   Salida: Ninguna                                                              ;
+;   Registros afectados: CC                                                      ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+imprimir_palabras_intentadas:
+	ldb	#intentos_totales
+	ldx	#cadena_palabras
+	ldy	#colores_palabras
+
+bucle_colocar_cursor_fila_ipi:
+	cmpb	num_intentos
+	beq	rts_ipi
+
+	jsr	colorcar_cursor
+	clra
+
+	pshu	b
+bucle_imprimir_palabra_ipi:
+	ldb	,y+
+
+	; Dependiendo del valor imprimimos uno u otro valor
+	cmpb	#'0
+	beq	imprimir_verde_ipi
+
+	cmpb	#'1
+	beq	imprimir_amarillo_ipi
+
+	cmpb	#'2
+	beq	imprimir_rojo_ipi
+
+continuar_flujo_bucle_imprimir_ipi:
+	ldb	,x+
+	stb	0xFF00
+
+comprobaciones_salir_bucle_ipi:
+	cmpa	#4
+	beq	salir_bucle_imprimir_letra_ipi	; comprobamos que no hayamos recorrido ya las 5 letras
+
+	pshu	x
+	ldx	#cursor_right	; movemos el cursor a la derecha
+	jsr	print
+	pulu	x
+
+	inca	; Incrementamos A
+
+	bra	bucle_imprimir_palabra_ipi
+
+salir_bucle_imprimir_letra_ipi:
+	pshu	x
+	ldx	#restore_cursor_position
+	jsr	print
+	pulu	x
+
+	pulu	b
+
+	decb	; Decremenamos B
+	bra	bucle_colocar_cursor_fila_ipi	; Volvemos al bucle
+
+imprimir_verde_ipi:
+	pshu	x
+	ldx	#color_verde
+	jsr	print
+	pulu	x
+	bra	continuar_flujo_bucle_imprimir_ipi
+
+imprimir_amarillo_ipi:
+	pshu	x
+	ldx	#color_amarillo
+	jsr	print
+	pulu	x
+	bra	continuar_flujo_bucle_imprimir_ipi
+
+imprimir_rojo_ipi:
+	pshu	x
+	ldx	#color_rojo
+	jsr	print
+	pulu	x
+	bra	continuar_flujo_bucle_imprimir_ipi
+
+imprimir_blanco_ipi:
+	pshu	x
+	ldx	#color_blanco
+	jsr	print
+	pulu	x
+	bra	comprobaciones_salir_bucle_ipi
+
+rts_ipi:
 	rts
