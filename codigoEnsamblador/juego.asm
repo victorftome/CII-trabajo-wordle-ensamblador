@@ -91,6 +91,14 @@ bucle_pedir_palabras_j:
 	jsr	colorcar_cursor	; Llamamos a la subrutina para colocar el cursor verticalmente
 	jsr	pedir_palabra	; Llamamos a la subrutina para pedir la palabra
 
+	; Comprobamos la salida del programa
+	cmpa	#1
+	beq	fin_bucle_pedir_palabras_ij
+
+	cmpa	#2
+	beq	inicializar_juego
+
+	; Decrementamos el numero de intentos
 	dec	num_intentos
 
 	ldx	#restore_cursor_position
@@ -128,7 +136,9 @@ perdedor_ij:
 
 	jsr	pedir_confirmacion
 
-fin_bucle_pedir_palabras_ij
+	bra	fin_bucle_pedir_palabras_ij
+
+fin_bucle_pedir_palabras_ij:
 	rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -151,8 +161,6 @@ reset_variables:
 bucle_palabras_rv:
 	sta	,y+
 	ldb	,y
-
-	stb	0xFF00
 
 	cmpb	#'\0
 	bne	bucle_palabras_rv
@@ -212,11 +220,11 @@ rts_cc:
 ;       a diferentes subrutinas para realizar las diferentes comprobaciones      ;
 ;                                                                                ;
 ;   Entrada: Ninguna                                                             ;
-;   Salida: Ninguna                                                              ;
+;   Salida: A-(1 Si se sale al menu, 2 Si se reiniciar el juego, 0 salida normal);
 ;   Registros afectados: CC                                                      ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 pedir_palabra:
-	pshu	d,x
+	pshu	b,x
 	jsr	preparar_puntero_cadena
 	ldb	#6	; Vamos a usar el registro B como contador para pedir un maximo de 6 caracteres
 			; Pedimos 6 carecteres ya que necesitamos las 5 letras de la palabra
@@ -231,6 +239,12 @@ bucle_pp:
 
 	tsta	; comprobamos que el caracter es incorrecto
 	beq	bucle_pp
+
+	cmpa	#1
+	beq	reiniciar_juego_pp
+
+	cmpa	#2
+	beq	volver_menu_pp
 
 	cmpa	#3
 	beq	eliminar_caracter_puntero_pp
@@ -257,6 +271,7 @@ palabra_no_valida_pp:
 
 palabra_valida_pp:
 	jsr	comprobar_palabra_introducida
+	clra
 	bra	rts_pp
 
 correcto_pp:
@@ -272,8 +287,16 @@ eliminar_caracter_puntero_pp:
 
 	bra	bucle_pp
 
+
+volver_menu_pp:
+	lda	#1
+	bra	rts_pp
+
+reiniciar_juego_pp:
+	lda	#2
+
 rts_pp:
-	pulu	d,x
+	pulu	b,x
 	rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -527,8 +550,6 @@ bucle_comprobar_letras_dif_pos:
 bucle_comprobar_letras_misma_pos:
 	incb
 	lda	,x+
-	cmpa	,y+
-	beq	poner_verde_cpi	; comprobamos que son iguales, si lo son ponemos el color a verde
 
 	; Comprobamos que A no vale ni ? ni \0
 	; ya que en ese caso ya habriamos leido todos los caracteres
@@ -537,6 +558,9 @@ bucle_comprobar_letras_misma_pos:
 
 	cmpa	#'\0
 	beq	rts_cpi
+
+	cmpa	,y+
+	beq	poner_verde_cpi	; comprobamos que son iguales, si lo son ponemos el color a verde
 
 	bra	bucle_comprobar_letras_misma_pos
 
