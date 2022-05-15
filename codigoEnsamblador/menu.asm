@@ -6,7 +6,7 @@
 
 .module menu
 
-.globl	print_menu
+.globl	cargar_menu
 
 ; Subrutinas a usar
 .globl	print
@@ -39,16 +39,17 @@ cadena_num_palabras:
 	.asciz "Num de palabras: "
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;   print_menu                                                                   ;
+;   cargar_menu                                                                  ;
 ;       Imprime el menu y se queda esperando la opción                           ;
 ;                                                                                ;
 ;   Entrada: Ninguna                                                             ;
 ;   Salida: Ninguna                                                              ;
 ;   Registros afectados: CC                                                      ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-print_menu:
+cargar_menu:
 	pshu	x,a
 
+print_menu:
 	ldx		#cadena_menu
 	jsr		print
 
@@ -118,4 +119,4 @@ instrucciones:
 
 jugar_menu:
 	jsr	inicializar_juego
-	bra	salir
+	bra	print_menu

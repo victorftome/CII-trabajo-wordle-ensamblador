@@ -1,7 +1,7 @@
 .module main
 
 .globl	print_presentacion
-.globl	print_menu
+.globl	cargar_menu
 
 ; Variables con la dirección de inicio de las pilas
 ; Se han elegido estas direcciones ya que se considera que
@@ -20,7 +20,7 @@ main:
 	jsr	print_presentacion
 
 menu:
-	jsr	print_menu
+	jsr	cargar_menu
 
 fin_programa:
 	lda	#'\n

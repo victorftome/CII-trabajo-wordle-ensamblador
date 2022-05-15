@@ -9,6 +9,7 @@
 .globl	print
 .globl	inicializar_juego
 .globl	comprobar_palabra_existente
+.globl	pedir_confirmacion
 
 ; Variables
 intentos_totales	.equ	6 ; Varibale de referencia que va a almacenar el numero de intentos
@@ -47,6 +48,12 @@ fila_juego:
 	.ascii	"    #?#   #?#   #?#   #?#   #?#\n"
 	.asciz	"    ###   ###   ###   ###   ###\n\n"
 
+mensaje_ganar:
+	.asciz	"HAS ACERTADO LA PALABRA!!!!"
+
+mensaje_perder:
+	.asciz	"Se acabaron los intentos.\nLa palabra era: "
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   inicializar_juego                                                            ;
 ;       Se encarga de realizar y llamar a todas las subrutinar                   ;
@@ -57,6 +64,11 @@ fila_juego:
 ;   Registros afectados: CC                                                      ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 inicializar_juego:
+	lda	#intentos_totales
+	sta	num_intentos
+
+	jsr	reset_variables
+
 	ldx	#cabecera_juego
 	jsr	print
 	lda	#1	; Inicializamos el registro A a 1
@@ -86,6 +98,11 @@ bucle_pedir_palabras_j:
 
 	jsr	imprimir_palabras_intentadas
 
+	jsr	check_victoria
+
+	tsta
+	bne	ganador_ij	; Si ha no vale 0 esq hemos ganado
+
 	ldx	#restore_cursor_position
 	jsr	print
 
@@ -93,21 +110,63 @@ bucle_pedir_palabras_j:
 	cmpb	#0
 	bne	bucle_pedir_palabras_j
 
-	; TODO DEBUG ELIMINAR INICIO
-	ldb	#'\n
-	stb	0xFF00
-	ldb	#'\n
-	stb	0xFF00
-	ldx	#cadena_palabras
+	bra	perdedor_ij:
+
+ganador_ij:
+	ldx	#mensaje_ganar
+	jsr	print
+	jsr	pedir_confirmacion
+
+	bra	fin_bucle_pedir_palabras_ij
+
+perdedor_ij:
+	ldx	#mensaje_perder
 	jsr	print
 
-	ldb	#'\n
-	stb	0xFF00
+	ldx	#palabra_secreta
+	jsr	print
 
+	jsr	pedir_confirmacion
+
+fin_bucle_pedir_palabras_ij
+	rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   reset_variables                                                              ;
+;       Se encarga de reinicar el valor de las variables cadena palabra          ;
+;       y colores palabras                                                       ;
+;                                                                                ;
+;   Entrada: Ninguna                                                             ;
+;   Salida: Las variables se resetearan al valor original                        ;
+;   Registros afectados: CC                                                      ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+reset_variables:
+	pshu	a,b,y,x
+
+	ldy	#cadena_palabras
 	ldx	#colores_palabras
-	jsr	print
-	; DEBUG ELIMINAR FIN
 
+	lda	#'?
+
+bucle_palabras_rv:
+	sta	,y+
+	ldb	,y
+
+	stb	0xFF00
+
+	cmpb	#'\0
+	bne	bucle_palabras_rv
+
+	lda	#'2
+bucle_colores_rv:
+	sta	,x+
+	ldb	,x
+
+	cmpb	#'\0
+	bne	bucle_colores_rv
+
+fin_rv:
+	pulu	a,b,y,x
 	rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -497,10 +556,10 @@ rts_cpi:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   poner_color                                                                  ;
-;       En esta subrutina se almacenara en Y la direccion de inicio a la ultima  ;
-;       palabra introducida                                                      ;
+;       En esta subrutina pondra el color indicado en A en la posicion del       ;
+;       arreglo                                                                  ;
 ;                                                                                ;
-;   Entrada: B-Posicion a insertarlo                                             ;
+;   Entrada: A-color codificado, B-Posicion a insertarlo                         ;
 ;   Salida: Ninguna.                                                             ;
 ;   Registros afectados: CC                                                      ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -648,4 +707,57 @@ imprimir_blanco_ipi:
 	bra	comprobaciones_salir_bucle_ipi
 
 rts_ipi:
+	rts
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   check_victoria                                                               ;
+;       En esta subrutina comprobaremos que se ha adivinado la palabra           ;
+;                                                                                ;
+;   Entrada: Ninguna                                                             ;
+;   Salida: A(0-Si no se ha ganado, 1-si se ha ganado)                           ;
+;   Registros afectados: CC                                                      ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+check_victoria:
+	pshu	b,y
+
+	ldy	#colores_palabras	; Cargamos en Y el puntero a los colores
+	ldb	num_intentos		; Cargamos el intento actual
+
+	incb
+
+preparar_puntero_cv:
+	cmpb	#intentos_totales
+	beq	cont_cv
+
+	leay	5,y
+	incb
+	bra	preparar_puntero_cv
+
+cont_cv:
+	clrb
+
+; Recorremos la cadena hasta que la terminemos o lleguemos a un numero diferente de 0
+; Si se sale porque ha encontrado un numero distinto de 0 no hemos ganado.
+; En caso contrario hemos ganado.
+bucle_comprobar_victoria_cv:
+	cmpb	#4
+	beq	fin_si_gana_cv
+
+	lda	,y+
+	incb
+	cmpa	#'0
+	beq	bucle_comprobar_victoria_cv
+
+	bra	fin_no_gana_cv
+
+fin_si_gana_cv:
+	lda	#1
+	bra	fin_cv
+
+fin_no_gana_cv:
+	clra
+
+fin_cv:
+	pulu	b,y
 	rts
