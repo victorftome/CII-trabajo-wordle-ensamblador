@@ -10,6 +10,8 @@
 .globl	inicializar_juego
 .globl	comprobar_palabra_existente
 .globl	pedir_confirmacion
+.globl	get_next_word
+
 
 ; Variables
 intentos_totales	.equ	6 ; Varibale de referencia que va a almacenar el numero de intentos
@@ -64,6 +66,7 @@ mensaje_perder:
 ;   Registros afectados: CC                                                      ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 inicializar_juego:
+	jsr	cargar_palabra_secreta
 	lda	#intentos_totales
 	sta	num_intentos
 
@@ -784,4 +787,29 @@ fin_no_gana_cv:
 
 fin_cv:
 	pulu	b,y
+	rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   cargar_palabra_secreta                                                       ;
+;       En esta subrutina obtendremos una nueva palabra secreta                  ;
+;                                                                                ;
+;   Entrada: Ninguna                                                             ;
+;   Salida: Ninguna                                                              ;
+;   Registros afectados: CC                                                      ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+cargar_palabra_secreta:
+	pshu	y,x,a
+	ldy	#palabra_secreta
+	jsr	get_next_word
+
+bucle_cps:	; Recorremos almacenando la palabra en y (puntero a palabra secreta)
+	lda	,x+
+	cmpa	#'\n
+	beq	rts_cps
+
+	sta	,y+
+	bra	bucle_cps
+
+rts_cps:
+	pulu	y,x,a
 	rts
