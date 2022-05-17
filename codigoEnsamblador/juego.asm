@@ -63,7 +63,7 @@ mensaje_perder:
 ;                                                                                ;
 ;   Entrada: Ninguna                                                             ;
 ;   Salida: Ninguna                                                              ;
-;   Registros afectados: CC                                                      ;
+;   Registros afectados: X, Y, A, B, CC                                          ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 inicializar_juego:
 	jsr	cargar_palabra_secreta
@@ -224,7 +224,7 @@ rts_cc:
 ;                                                                                ;
 ;   Entrada: Ninguna                                                             ;
 ;   Salida: A-(1 Si se sale al menu, 2 Si se reiniciar el juego, 0 salida normal);
-;   Registros afectados: CC                                                      ;
+;   Registros afectados: A, CC                                                   ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 pedir_palabra:
 	pshu	b,x
@@ -383,7 +383,7 @@ caracter_no_valido_cci:
 	ldb	#8	; Volvemos a la posicion anterior
 	stb	0xFF00
 
-	ldb	#'?	; Sustituimos el caracter introducido por el usuario por la interrogacion
+	ldb	#'?	; Sustituimos el caracter introducido por teclado por la interrogacion
 	stb	0xFF00
 
 	ldb	#8	; Volvemos a la posicion anterior para el proximo caracter a introducir del usuario
@@ -514,7 +514,7 @@ fin_ppc:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   comprobar_palabra_introducida                                                ;
 ;       En esta subrutina se comprobara la palabra introducida con la palabra    ;
-;       secreta, sacar los colores y comprobar que se ha acertado o no.          ;
+;       secreta y se sacaran los colores.                                        ;
 ;                                                                                ;
 ;   Entrada: Ninguna                                                             ;
 ;   Salida: Ninguna                                                              ;
@@ -633,7 +633,7 @@ poner_color:
 ;       palabra introducida                                                      ;
 ;                                                                                ;
 ;   Entrada: Ninguna                                                             ;
-;   Salida: Y apuntara a la ultima palabra introducida                           ;
+;   Salida: Y-apuntara a la ultima palabra introducida                           ;
 ;   Registros afectados: CC                                                      ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 apuntar_ultima_palabra:
@@ -649,7 +649,7 @@ apuntar_ultima_palabra:
 ;                                                                                ;
 ;   Entrada: Ninguna                                                             ;
 ;   Salida: Ninguna                                                              ;
-;   Registros afectados: CC                                                      ;
+;   Registros afectados: X, Y, A, B, CC                                          ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 imprimir_palabras_intentadas:
 	ldb	#intentos_totales

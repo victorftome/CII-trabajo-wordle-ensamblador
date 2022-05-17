@@ -1,7 +1,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   MODULO: presentación                                                         ;
-;       En este modulo se van a crear todas las subrutinas que                   ;
-;       van a realizar operaciones con cadenas                                   ;
+;       Este modulo se va a encargar de imprimir la presentación                 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 .module	presentacion
@@ -32,7 +31,7 @@ authors:
 ;                                                                                ;
 ;   Entrada: Ninguna                                                             ;
 ;   Salida: Ninguna                                                              ;
-;   Registros afectados: CC                                                      ;
+;   Registros afectados: B, CC                                                   ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 print_presentacion:
 	pshu	x		; Almacenamos el contenido de x en la pila para posterior recuperacion

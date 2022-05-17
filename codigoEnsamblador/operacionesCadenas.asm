@@ -99,7 +99,7 @@ fin_itc:
 ;   Salida: A-Un 0 si la palabra no se encuentra en el diccionario y un 1 si se  ;
 ;           ha encontrado                                                        ;
 ;                                                                                ;
-;   Registros afectados: CC.                                                     ;
+;   Registros afectados: X, CC.                                                  ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 dir_inicio_palabra:	.word	0	;,Variable sobre la que nos apollamos para almacenar la direccion de memoria del primer
 					; caracter de la palabra introducida por el usuario.

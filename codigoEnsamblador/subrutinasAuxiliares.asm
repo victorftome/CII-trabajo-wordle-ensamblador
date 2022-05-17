@@ -7,6 +7,9 @@
 
 .module	subrutinasAuxiliares
 
+; Variables importadas
+.globl	num_palabras
+
 ; Subrutinas importadas
 .globl	print
 
@@ -27,7 +30,7 @@ mensaje_continuar:
 ;                                                                                ;
 ;   Entrada: Ninguna                                                             ;
 ;   Salida: Ninguna                                                              ;
-;   Registros afectados: CC                                                      ;
+;   Registros afectados: B, CC                                                   ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 pedir_confirmacion:
 	ldx	#mensaje_continuar
@@ -55,7 +58,8 @@ get_next_word:
 	clra
 
 	ldb	posicion_palabra
-	cmpb	#18
+
+	cmpb	num_palabras
 	bne	#bucle_palabra_gnw
 
 	clr	posicion_palabra

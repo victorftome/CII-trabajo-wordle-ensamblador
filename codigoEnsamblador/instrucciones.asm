@@ -14,7 +14,7 @@
 .globl	print_instrucciones
 
 instrucciones:
-	.ascii	"\33[2J\33[H\33[1m========== INSTRUCCIONES (Wordle) ==========\n"
+	.ascii	"\33[2J\33[H\33[1m==================== INSTRUCCIONES (Wordle) ====================\n\n"
 	.ascii	"Funcionamiento del juego: \33[0m\n"
 	.ascii	"\tAl iniciar el juego apareceran 6 columnas de 5 casillas\n"
 	.ascii	"\ten estas casillas se introduciran las palabras a comprobar.\n"
@@ -45,7 +45,7 @@ controles:
 ;                                                                                ;
 ;   Entrada: Ninguna                                                             ;
 ;   Salida: Ninguna                                                              ;
-;   Registros afectados: CC                                                      ;
+;   Registros afectados: B, CC                                                   ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 print_instrucciones:
 	ldx	#instrucciones

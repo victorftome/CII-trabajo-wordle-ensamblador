@@ -2,6 +2,7 @@
 
 .globl	print_presentacion
 .globl	cargar_menu
+.globl	get_num_palabras
 
 ; Variables con la dirección de inicio de las pilas
 ; Se han elegido estas direcciones ya que se considera que
@@ -20,6 +21,7 @@ main:
 	jsr	print_presentacion
 
 menu:
+	jsr	get_num_palabras	
 	jsr	cargar_menu
 
 fin_programa:

@@ -17,6 +17,7 @@
 
 ; Variables globales
 .globl	palabras
+.globl	num_palabras
 
 cadena_menu:
 	.ascii "\33[2J\33[H####################################\n"
@@ -44,7 +45,7 @@ cadena_num_palabras:
 ;                                                                                ;
 ;   Entrada: Ninguna                                                             ;
 ;   Salida: Ninguna                                                              ;
-;   Registros afectados: CC                                                      ;
+;   Registros afectados: Y, B, CC                                                ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 cargar_menu:
 	pshu	x,a
@@ -77,6 +78,9 @@ comprobar_opcion:
 	cmpa	#'S
 	beq		salir
 
+	cmpa	#'s
+	beq		salir
+
 	ldx		#cadena_opcion_incorrecta
 	jsr		print
 
@@ -91,15 +95,10 @@ mostrar_diccionario:
 	ldx	#palabras
 	jsr	print
 
-	; Almacenamos B en el pila de usuario ya que el metodo print
-	; nos va a sobrescribir el numero de caracteres leidos
-	pshu	b
-
 	ldx	#cadena_num_palabras
 	jsr	print
 
-	; Recuperamos B
-	pulu	b
+	ldb	num_palabras
 
 	; Pasamos el numero en B a caracter
 	jsr	int_to_char

@@ -1,6 +1,10 @@
 	.module diccionario
 
 	.globl 	palabras
+	.globl	num_palabras
+	.globl	get_num_palabras
+
+num_palabras:	.byte	0
 
 palabras:
 	.ascii	"MOSCA\n"
@@ -22,3 +26,29 @@ palabras:
 	.ascii	"PANDA\n"
 	.ascii	"KOALA\n"
 	.byte	0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   get_num_palabras                                                             ;
+;       Subrutina que devuelve el numero de palabras del diccionario.            ;
+;                                                                                ;
+;   Entrada: Ninguna                                                             ;
+;   Salida: Ninguna                                                              ;
+;   Registros afectados: CC                                                      ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+get_num_palabras:
+	pshu	x,a
+	ldx	#palabras
+
+bucle_gnp:
+	lda	,x+
+	beq	fin_gnp
+
+	cmpa	#'\n
+	bne	bucle_gnp
+
+	inc	num_palabras
+	bra	bucle_gnp
+
+fin_gnp:
+	pulu	x,a
+	rts
